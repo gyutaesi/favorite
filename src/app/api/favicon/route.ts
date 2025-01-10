@@ -27,6 +27,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ favicon });
   } catch (err) {
+    console.error(err);
     return NextResponse.json(
       { error: "Failed to fetch favicon" },
       { status: 500 }
