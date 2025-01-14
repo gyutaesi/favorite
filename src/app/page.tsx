@@ -7,6 +7,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { getData } from "@/lib/neon";
 
 const data = {
   groups: [
@@ -49,6 +50,8 @@ const data = {
   ],
 };
 export default function Page() {
+  console.log(getData());
+
   return (
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   ContextMenu,
@@ -71,6 +71,7 @@ export function Bookmark({
         </a>
       </ContextMenuTrigger>
       <ContextMenuContent>
+        <ContextMenuItem>Edit</ContextMenuItem>
         <ContextMenuItem>Delete</ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
