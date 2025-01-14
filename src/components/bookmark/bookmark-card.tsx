@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteBookmark } from "@/app/actions";
+import { deleteBookmark } from "@/lib/actions";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -8,24 +8,23 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { useState, useEffect } from "react";
-import {
-  EditBookmarkDialog,
-  EditBookmarkTrigger,
-} from "./edit-bookmark-dialog";
+import { BookmarkFormDialog } from "./bookmark-form-dialog";
 import { Trash2 } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Bookmark } from "@/types";
 
-export function Bookmark({
+interface BookmarkCardProps {
+  bookmark: Bookmark;
+  groupId: string;
+  isDragging?: boolean;
+}
+
+export function BookmarkCard({
   bookmark,
-}: {
-  bookmark: {
-    id: string;
-    title: string;
-    description?: string;
-    url: string;
-  };
-}) {
+  groupId,
+  isDragging = false,
+}: BookmarkCardProps) {
   const [favicon, setFavicon] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
@@ -35,22 +34,27 @@ export function Bookmark({
     setNodeRef,
     transform,
     transition,
-    isDragging,
-  } = useSortable({ id: bookmark.id });
+    isDragging: isSortableDragging,
+  } = useSortable({
+    id: bookmark.id,
+    data: {
+      type: "bookmark",
+      bookmark,
+      groupId,
+    },
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-    cursor: isDragging ? "grabbing" : "grab",
+    opacity: isDragging || isSortableDragging ? 0.5 : 1,
+    cursor: isSortableDragging ? "grabbing" : "grab",
   };
 
   useEffect(() => {
-    // 1. 먼저 Google Favicon 서비스 사용
     const googleFavicon = `https://www.google.com/s2/favicons?domain=${bookmark.url}`;
     setFavicon(googleFavicon);
 
-    // 2. 백그라운드에서 실제 favicon 가져오기 시도
     fetch(`/api/favicon?url=${encodeURIComponent(bookmark.url)}`)
       .then((res) => res.json())
       .then((data) => {
@@ -59,26 +63,16 @@ export function Bookmark({
         }
       })
       .catch(() => {
-        // Google Favicon 유지
+        // Keep Google Favicon
       });
   }, [bookmark.url]);
-
-  if (!bookmark.id) {
-    return null;
-  }
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (isDragging) {
-      e.preventDefault();
-    }
-  };
 
   return (
     <>
       <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
         <ContextMenu>
           <ContextMenuTrigger>
-            <div className="flex flex-col gap-1 justify-between p-4 border border-stone-400 rounded-lg">
+            <div className="flex flex-col gap-1 justify-between p-4 border border-stone-400 rounded-lg bg-white">
               <div className="flex items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -100,17 +94,21 @@ export function Bookmark({
                   href={bookmark.url}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={handleClick}
+                  onClick={(e) => isSortableDragging && e.preventDefault()}
                   className="flex-1"
                 >
                   <p className="font-bold truncate">{bookmark.title}</p>
-                  <p className="text-sm text-gray-600 truncate">{bookmark.url}</p>
+                  <p className="text-sm text-gray-600 truncate">
+                    {bookmark.url}
+                  </p>
                 </a>
               </div>
             </div>
           </ContextMenuTrigger>
           <ContextMenuContent>
-            <EditBookmarkTrigger onClick={() => setEditDialogOpen(true)} />
+            <ContextMenuItem onClick={() => setEditDialogOpen(true)}>
+              Edit
+            </ContextMenuItem>
             <ContextMenuItem
               className="text-destructive"
               onClick={() => deleteBookmark(bookmark.id)}
@@ -121,7 +119,7 @@ export function Bookmark({
           </ContextMenuContent>
         </ContextMenu>
       </div>
-      <EditBookmarkDialog
+      <BookmarkFormDialog
         bookmark={bookmark}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
