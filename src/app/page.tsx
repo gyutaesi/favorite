@@ -1,56 +1,18 @@
 import { AppSidebar } from "@/components/app-sidebar";
-import { Group } from "@/app/_components/group";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { Separator } from "@/components/ui/separator";
+import { AddGroupDialog } from "./_components/add-group-dialog";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { getData } from "@/lib/neon";
+import { getGroupsByUserId } from "@/lib/db";
+import { GroupList } from "./_components/group-list";
 
-const data = {
-  groups: [
-    {
-      id: "1",
-      title: "Group 1",
-      bookmarks: [
-        {
-          id: "1",
-          title: "Bookmark 1",
-          description: "This is a bookmark description",
-          url: "https://www.naver.com",
-        },
-        {
-          id: "2",
-          title: "Bookmark 2",
-          description: "This is another bookmark description",
-          url: "https://github.sec.samsung.net",
-        },
-      ],
-    },
-    {
-      id: "2",
-      title: "Group 2",
-      bookmarks: [
-        {
-          id: "3",
-          title: "Bookmark 3",
-          description: "This is a bookmark description",
-          url: "https://example.com",
-        },
-        {
-          id: "4",
-          title: "Bookmark 4",
-          description: "This is another bookmark description",
-          url: "https://example.com",
-        },
-      ],
-    },
-  ],
-};
-export default function Page() {
-  console.log(getData());
+export default async function Page() {
+  const userId = "0d0578f8-7801-4625-8a93-2568fc5da2d0";
+  const groups = await getGroupsByUserId(userId);
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -64,11 +26,10 @@ export default function Page() {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            {data.groups.map((group) => (
-              <Group key={group.id} group={group} />
-            ))}
+          <div className="flex justify-end">
+            <AddGroupDialog userId={userId} />
           </div>
+          <GroupList groups={groups} />
           <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
         </div>
       </SidebarInset>
